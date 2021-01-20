@@ -1,13 +1,23 @@
+const url = require('url');
+const app = require('./app.js');
+
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
+    const rendered = await app.render({
+        host: null, // TODO
+        method: context.req.method,
+        headers: context.req.headers,
+        path: context.req.originalUrl,
+        query: context.req.query
+    });
 
-    const name = (req.query.name || (req.body && req.body.name));
-    const responseMessage = name
-        ? "Hello, " + name + ". This HTTP triggered function executed successfully."
-        : "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.";
+    if (rendered) {
+        context.res.status = rendered.status;
+        context.res.headers = rendered.headers;
+        context.res.body = rendered.body;
+    } else {
+        context.res.status = 404;
+        context.res.body = "nope";
+    }
 
-    context.res = {
-        // status: 200, /* Defaults to 200 */
-        body: responseMessage
-    };
 }
